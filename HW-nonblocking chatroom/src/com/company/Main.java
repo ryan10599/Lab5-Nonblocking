@@ -12,6 +12,7 @@ import java.util.Set;
 
 public class Main {
 
+    private static ArrayList<SocketChannel> keyArray = new ArrayList<>();
     private static String cmd = new String();
 
     public static void main(String[] args) throws Exception {
@@ -32,34 +33,59 @@ public class Main {
 
             while (it.hasNext()){
                 SelectionKey key = it.next(); // block
-                it.remove();
+
 
                 if(key.isAcceptable()){
                     ServerSocketChannel ch = (ServerSocketChannel) key.channel();
                     SocketChannel clientch = ch.accept();
                     clientch.configureBlocking(false);
                     clientch.register(selector, SelectionKey.OP_READ);
+                    keyArray.add(clientch);
+                    //System.out.println(keyArray.size());
                 }
 
                 if(key.isReadable()){
-                    System.out.println("Cc");
                     SocketChannel ch = (SocketChannel) key.channel();
-                    ByteBuffer buf = ByteBuffer.allocate(20);
+                    ByteBuffer buf = ByteBuffer.allocate(1000);
+                    //ch.configureBlocking(false);
+                    buf.clear();
                     ch.read(buf);
                     buf.flip();
                     cmd = new String(buf.array());
+                    System.out.println(cmd);
                     ch.register(selector, SelectionKey.OP_WRITE);
                 }
 
                 if(key.isWritable()){
-                    SocketChannel ch = (SocketChannel) key.channel();
-                    ByteBuffer buf = ByteBuffer.allocate(20);
-                    System.out.println(cmd);
-                    buf.put(cmd.getBytes());
-                    buf.flip();
-                    ch.write(buf);
-                    ch.register(selector, SelectionKey.OP_READ);
+                    //SocketChannel ch = (SocketChannel) key.channel();
+//                    ByteBuffer buf = ByteBuffer.allocate(1000);
+//                    System.out.println(cmd);
+//                    buf.put(("S: "+cmd).getBytes());
+//                    buf.flip();
+//                    ch.write(buf);
+//                    ch.register(selector, SelectionKey.OP_READ);
+//                    System.out.println("Check");
+//                    for(SocketChannel chs: keyArray){
+//                        SocketChannel c = chs;
+//                        ByteBuffer buf = ByteBuffer.allocate(3000);
+//                        buf.put(("S: "+cmd).getBytes());
+//                        buf.flip();
+//                        c.write(buf);
+//                        c.register(selector, SelectionKey.OP_READ);
+//                    }
+                    for(int i = 0; i < keyArray.size() ; i++){
+                        SocketChannel c = keyArray.get(i);
+
+                            ByteBuffer buf = ByteBuffer.allocate(3000);
+                            buf.put(("S: " + cmd).getBytes());
+                            buf.flip();
+                            c.write(buf);
+                            c.register(selector, SelectionKey.OP_READ);
+
+                    }
+
                 }
+                it.remove();
             }
         }
     }
